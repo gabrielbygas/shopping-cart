@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\Cart;
 use App\Models\Product;
 use Illuminate\Support\Facades\Auth;
+use App\Jobs\LowStockNotificationJob;
 
 class CartService
 {
@@ -20,6 +21,11 @@ class CartService
         // Check stock
         if ($product->stock_quantity < $quantity) {
             throw new \Exception("Insufficient stock for this product.");
+        }
+
+        // Dispatch low stock notification if stock is 5 or less
+        if ($product->stock_quantity <= 5) {
+            LowStockNotificationJob::dispatch($product)->onQueue('emails');
         }
 
         // Check if product is already in cart
