@@ -24,7 +24,7 @@ class LowStockNotificationJob implements ShouldQueue
 
     public function handle()
     {
-        // Envoyer un email à l'admin (remplace "admin@example.com" par l'email réel)
+        // Send email to admin (replace "gabrielkalala@protonmail.com" with actual admin email)
         Mail::to('gabrielkalala@protonmail.com')
             ->send(new LowStockNotificationMail($this->product));
     }

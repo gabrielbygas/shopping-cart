@@ -1,12 +1,12 @@
 @component('mail::message')
-# Notification : Stock bas
+# Notification: Low Stock
 
-Le produit **{{ $product->name }}** a un stock faible ({{ $product->stock_quantity }} unités restantes).
+The product **{{ $product->name }}** has low stock ({{ $product->stock_quantity }} units remaining).
 
 @component('mail::button', ['url' => url('/products')])
-Voir les produits
+View Products
 @endcomponent
 
-Merci,<br>
+Thank you,<br>
 {{ config('app.name') }}
 @endcomponent
