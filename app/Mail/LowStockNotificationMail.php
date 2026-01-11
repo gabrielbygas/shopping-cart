@@ -20,7 +20,7 @@ class LowStockNotificationMail extends Mailable
 
     public function build()
     {
-        return $this->subject('Notification : Stock bas pour ' . $this->product->name)
+        return $this->subject('Notification: Low Stock for ' . $this->product->name)
                     ->markdown('emails.low_stock_notification')
                     ->with(['product' => $this->product]);
     }

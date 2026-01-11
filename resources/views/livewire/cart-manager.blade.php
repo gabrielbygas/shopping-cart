@@ -1,80 +1,75 @@
-<?php
-
-use Livewire\Volt\Component;
-use App\Services\CartService;
-
-new class extends Component {
-    protected $listeners = [
-        'cart-updated' => '$refresh', // automatically refreshes the cart
-    ];
-
-    public function updateQuantity(CartService $cartService, string $cartId, int $qty)
-    {
-        try {
-            $cartService->updateQuantity($cartId, $qty);
-            session()->flash('success', 'Quantity updated');
-            $this->dispatch('cart-updated');
-        } catch (\Exception $e) {
-            session()->flash('error', $e->getMessage());
-        }
-    }
-
-    public function removeFromCart(CartService $cartService, string $cartId)
-    {
-        try {
-            $cartService->removeFromCart($cartId);
-            session()->flash('success', 'Product removed from cart');
-            $this->dispatch('cart-updated');
-        } catch (\Exception $e) {
-            session()->flash('error', $e->getMessage());
-        }
-    }
-
-    public function with(CartService $cartService)
-    {
-        return [
-            'items' => $cartService->getCart(),
-        ];
-    }
-};
-?>
-
-<div class="p-4 bg-gray-50 rounded-lg">
-    <h2 class="text-xl font-bold mb-4">My Cart</h2>
-
+<div>
     @if (session('success'))
-        <div class="mb-3 text-green-700 bg-green-100 border border-green-300 px-3 py-2 rounded">
-            {{ session('success') }}
-        </div>
+        <div class="mb-6 p-3 bg-emerald-50 text-emerald-700 text-sm rounded">{{ session('success') }}</div>
     @endif
-
     @if (session('error'))
-        <div class="mb-3 text-red-700 bg-red-100 border border-red-300 px-3 py-2 rounded">
-            {{ session('error') }}
-        </div>
+        <div class="mb-6 p-3 bg-red-50 text-red-700 text-sm rounded">{{ session('error') }}</div>
     @endif
 
     @if ($items->isEmpty())
-        <p class="text-gray-600">Your cart is empty.</p>
+        <div class="text-center py-20">
+            <p class="text-gray-600 mb-4">Your bag is empty</p>
+            <a href="{{ route('products') }}" wire:navigate class="inline-block px-6 py-2 bg-gray-900 text-white text-sm font-semibold hover:bg-gray-800">
+                Continue Shopping
+            </a>
+        </div>
     @else
-        @foreach ($items as $item)
-            <div class="flex justify-between items-center mb-3 border-b pb-2">
-                <div>
-                    <p class="font-semibold">{{ $item->product->name }}</p>
-                    <p class="text-sm text-gray-500">{{ number_format($item->product->price, 2) }} $</p>
-                </div>
+        <div class="grid lg:grid-cols-3 gap-8">
+            <!-- Items -->
+            <div class="lg:col-span-2 space-y-4">
+                @foreach ($items as $item)
+                    <div class="bg-white p-4 rounded-lg flex gap-4 border border-gray-200">
+                        <div class="w-24 h-24 bg-gray-100 rounded flex-shrink-0 overflow-hidden">
+                            @if ($item->product->image_url)
+                                <img src="{{ $item->product->image_url }}" alt="{{ $item->product->name }}" class="w-full h-full object-cover">
+                            @endif
+                        </div>
 
-                <div class="flex items-center space-x-2">
-                    <input type="number" min="1" value="{{ $item->quantity }}"
-                        wire:change="updateQuantity('{{ $item->id }}', $event.target.value)"
-                        class="w-16 border rounded px-2 py-1" />
+                        <div class="flex-grow">
+                            <h3 class="font-medium text-gray-900 mb-1">{{ $item->product->name }}</h3>
+                            <p class="text-sm text-gray-600 mb-3">${{ number_format($item->product->price, 2) }}</p>
 
-                    <button wire:click="removeFromCart('{{ $item->id }}')"
-                        class="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600">
-                        Remove
-                    </button>
-                </div>
+                            <div class="flex items-center gap-2">
+                                <input type="number" min="1" value="{{ $item->quantity }}"
+                                    wire:change="updateQuantity('{{ $item->id }}', $event.target.value)"
+                                    class="w-12 px-2 py-1 border border-gray-300 rounded text-sm">
+                                <button wire:click="removeFromCart('{{ $item->id }}')" class="text-xs text-gray-600 hover:text-red-600">Remove</button>
+                            </div>
+                        </div>
+
+                        <div class="text-right">
+                            <p class="font-semibold text-gray-900">${{ number_format($item->product->price * $item->quantity, 2) }}</p>
+                        </div>
+                    </div>
+                @endforeach
             </div>
-        @endforeach
+
+            <!-- Summary -->
+            <div class="bg-white p-6 rounded-lg border border-gray-200 h-fit sticky top-24">
+                <h2 class="font-semibold text-gray-900 mb-4">Order Summary</h2>
+                <div class="space-y-2 text-sm mb-4 pb-4 border-b border-gray-200">
+                    <div class="flex justify-between">
+                        <span class="text-gray-600">Subtotal</span>
+                        <span class="text-gray-900">${{ number_format($items->sum(fn($item) => $item->product->price * $item->quantity), 2) }}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-600">Shipping</span>
+                        <span class="text-gray-900">Free</span>
+                    </div>
+                </div>
+
+                <div class="flex justify-between mb-6">
+                    <span class="font-semibold text-gray-900">Total</span>
+                    <span class="font-bold text-lg text-gray-900">${{ number_format($items->sum(fn($item) => $item->product->price * $item->quantity), 2) }}</span>
+                </div>
+
+                <button class="w-full py-3 bg-gray-900 text-white font-semibold hover:bg-gray-800 mb-2">
+                    Checkout
+                </button>
+                <a href="{{ route('products') }}" wire:navigate class="block w-full py-3 bg-gray-100 text-gray-900 font-semibold hover:bg-gray-200 text-center rounded">
+                    Continue Shopping
+                </a>
+            </div>
+        </div>
     @endif
 </div>
